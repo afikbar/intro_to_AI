@@ -7,17 +7,24 @@ ids = ["111111111", "111111111"]
 
 class State(object):
     def __init__(self, grid):
+        self.grid = {(x, y): ele for x, row in enumerate(grid) for y, ele in enumerate(row)}
+        # lookup = {66: 'pacman', 11: 'pills', 21: 'pills', 31: 'pills', 41: 'pills', 51: 'pills', 71: 'pills'}
+        # posDtst = {}
+        # for key, value in sorted(d.items()):
+        #     posDtst.setdefault(value, []).append(key)
+
         self.pos_dict = {
-            'pacman': [(ix, iy) for ix, row in enumerate(grid) for iy, i in enumerate(row) if i == 66],
-            'pills': [(ix, iy) for ix, row in enumerate(grid) for iy, i in enumerate(row) if
-                      i in [11, 21, 31, 41, 51, 71]],
+            'pacman': [(x, y) for x, row in enumerate(grid) for y, ele in enumerate(row) if ele == 66],
+            'pills': [(x, y) for x, row in enumerate(grid) for y, ele in enumerate(row) if
+                      ele in [11, 21, 31, 41, 51, 71]],
             'ghosts': {
-                'blue': [(ix, iy) for ix, row in enumerate(grid) for iy, i in enumerate(row) if i in [20, 21]],
-                'yellow': [(ix, iy) for ix, row in enumerate(grid) for iy, i in enumerate(row) if i in [30, 31]],
-                'green': [(ix, iy) for ix, row in enumerate(grid) for iy, i in enumerate(row) if i in [40, 41]],
-                'red': [(ix, iy) for ix, row in enumerate(grid) for iy, i in enumerate(row) if i in [50, 51]],
+                'blue': [(x, y) for x, row in enumerate(grid) for y, ele in enumerate(row) if ele in [20, 21]],
+                'yellow': [(x, y) for x, row in enumerate(grid) for y, ele in enumerate(row) if ele in [30, 31]],
+                'green': [(x, y) for x, row in enumerate(grid) for y, ele in enumerate(row) if ele in [40, 41]],
+                'red': [(x, y) for x, row in enumerate(grid) for y, ele in enumerate(row) if ele in [50, 51]],
             },
-            'poison': [(ix, iy) for ix, row in enumerate(grid) for iy, i in enumerate(row) if i in [71, 77]],
+            'poison': [(x, y) for x, row in enumerate(grid) for y, ele in enumerate(row) if ele in [71, 77]],
+            'walls': [(x, y) for x, row in enumerate(grid) for y, ele in enumerate(row) if ele == 99]
         }
 
         self._pillCnt = len(self.pos_dict['pills'])
@@ -37,7 +44,8 @@ class PacmanProblem(search.Problem):
         You should change the initial to your own representation"""
         # receives the input from main in check.py
         self._size = (len(initial), len(initial[0]))  # size (rows,cols)
-
+        self._firstState = State(initial)
+        self.currState = self._firstState
         search.Problem.__init__(self, initial)  # we can change the initial (world as we see it)
 
     def actions(self, state):
@@ -46,6 +54,13 @@ class PacmanProblem(search.Problem):
         many actions, consider yielding them one at a time in an
         iterator, rather than building them all at once."""
         # define how we do expand in search algo (up,down,left,rigt), for pacman only
+        posDict = state.pos_dict
+        pRow, pCol = posDict['pacman'][0]  # returns a list.. (for coherentic method)
+        moves = {'U': (pRow - 1, pCol), 'R': (pRow, pCol + 1), 'D': (pRow + 1, pCol), 'L': (pRow - 1, pCol)}
+        for action, cord in moves:
+            if (cord not in posDict['walls']) and (cord not in list(posDict['ghosts'].values())) and (
+                    cord not in posDict['poison']):
+                yield action
 
     def result(self, state, action):
         """Return the state that results from executing the given
@@ -53,6 +68,11 @@ class PacmanProblem(search.Problem):
         self.actions(state)."""
         # ghosts moves here, as "result" from pacman action (moves towards pacman's new pos)
         # min(man_dist to pacman from one of the available slots)
+        pacmanX, pacmanY = state.pos_dict['pacman'][0]
+        for ghost, cord in state.pos_dict['ghosts'].items():
+            pRow, pCol = cord[0]
+            moves = {'U': (pRow - 1, pCol), 'R': (pRow, pCol + 1), 'D': (pRow + 1, pCol), 'L': (pRow - 1, pCol)}
+            shortest = min(moves, key=lambda k: abs(moves[k][0] - pacmanX) + abs(moves[k][1] - pacmanY)) #what happens if same?
 
     def goal_test(self, state):
         """ Given a state, checks if this is the goal state, compares to the created goal state"""
