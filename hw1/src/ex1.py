@@ -42,6 +42,7 @@ class State(object):
 
 class PacmanProblem(search.Problem):
     """This class implements a spaceship problem"""
+    directions = {'R': (0, 1), 'D': (1, 0), 'L': (- 1, 0), 'U': (- 1, 0)}  # order matters
 
     def __init__(self, initial):
         """Don't forget to set the goal or implement the goal test
@@ -50,7 +51,7 @@ class PacmanProblem(search.Problem):
         self._size = (len(initial), len(initial[0]))  # size (rows,cols)
         self._firstState = State(initial)
         self.currState = self._firstState
-        search.Problem.__init__(self, initial)  # we can change the initial (world as we see it)
+        search.Problem.__init__(self, self._firstState)  # we can change the initial (world as we see it)
 
     def actions(self, state):
         """Return the actions that can be executed in the given
