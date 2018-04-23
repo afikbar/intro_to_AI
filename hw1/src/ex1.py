@@ -1,39 +1,43 @@
 import search
 import random
 import math
+from utils import hashabledict, vector_add
+from copy import deepcopy
 
 ids = ["111111111", "111111111"]
 
 
 class State(object):
+    wall, pacman, cell = 99, 66, 10
+    pills, poison = [11, 21, 31, 41, 51, 71], [71, 77]
+    bGhost, yGhost, gGhost, rGhost = [20, 21], [30, 31], [40, 41], [50, 51]
+
     def __init__(self, grid):
-        self.grid = {(x, y): ele for x, row in enumerate(grid) for y, ele in enumerate(row)}
+        self.gridDict = {(x, y): ele for x, row in enumerate(grid) for y, ele in enumerate(row)}
         # lookup = {66: 'pacman', 11: 'pills', 21: 'pills', 31: 'pills', 41: 'pills', 51: 'pills', 71: 'pills'}
         # posDtst = {}
         # for key, value in sorted(d.items()):
         #     posDtst.setdefault(value, []).append(key)
-
         self.pos_dict = {
-            'pacman': [(x, y) for x, row in enumerate(grid) for y, ele in enumerate(row) if ele == 66],
-            'pills': [(x, y) for x, row in enumerate(grid) for y, ele in enumerate(row) if
-                      ele in [11, 21, 31, 41, 51, 71]],
+            'pacman': [(x, y) for x, row in enumerate(grid) for y, ele in enumerate(row) if ele == self.pacman],
+            'pills': [(x, y) for x, row in enumerate(grid) for y, ele in enumerate(row) if ele in self.pills],
             'ghosts': {
-                'blue': [(x, y) for x, row in enumerate(grid) for y, ele in enumerate(row) if ele in [20, 21]],
-                'yellow': [(x, y) for x, row in enumerate(grid) for y, ele in enumerate(row) if ele in [30, 31]],
-                'green': [(x, y) for x, row in enumerate(grid) for y, ele in enumerate(row) if ele in [40, 41]],
-                'red': [(x, y) for x, row in enumerate(grid) for y, ele in enumerate(row) if ele in [50, 51]],
+                'red': [(x, y) for x, row in enumerate(grid) for y, ele in enumerate(row) if ele in self.rGhost],
+                'blue': [(x, y) for x, row in enumerate(grid) for y, ele in enumerate(row) if ele in self.bGhost],
+                'yellow': [(x, y) for x, row in enumerate(grid) for y, ele in enumerate(row) if ele in self.yGhost],
+                'green': [(x, y) for x, row in enumerate(grid) for y, ele in enumerate(row) if ele in self.gGhost]
             },
-            'poison': [(x, y) for x, row in enumerate(grid) for y, ele in enumerate(row) if ele in [71, 77]],
-            'walls': [(x, y) for x, row in enumerate(grid) for y, ele in enumerate(row) if ele == 99]
+            'poison': [(x, y) for x, row in enumerate(grid) for y, ele in enumerate(row) if ele in self.poison],
+            'walls': [(x, y) for x, row in enumerate(grid) for y, ele in enumerate(row) if ele == self.wall]
         }
 
         self._pillCnt = len(self.pos_dict['pills'])
 
     def __eq__(self, other):
-        return isinstance(other, State) and self._pillCnt == other._pillCnt
+        return isinstance(other, State) and self.gridDict == other.gridDict
 
     def __hash__(self):
-        return hash(self._pillCnt)  # consider adding hash for ghosts cnt\dist?
+        return hash(hashabledict(self.gridDict))  # consider adding hash for ghosts cnt\dist?
 
 
 class PacmanProblem(search.Problem):
