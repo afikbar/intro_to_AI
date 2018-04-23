@@ -117,6 +117,8 @@ class PacmanProblem(search.Problem):
         """ This is the heuristic. It gets a node (not a state,
         state can be accessed via node.state)
         and returns a goal distance estimate"""
+        return node.state._pillCnt
+
 
     """Feel free to add your own functions"""
 
