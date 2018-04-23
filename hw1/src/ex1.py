@@ -74,11 +74,41 @@ class PacmanProblem(search.Problem):
         self.actions(state)."""
         # ghosts moves here, as "result" from pacman action (moves towards pacman's new pos)
         # min(man_dist to pacman from one of the available slots)
-        pacmanX, pacmanY = state.pos_dict['pacman'][0]
-        for ghost, cord in state.pos_dict['ghosts'].items():
-            pRow, pCol = cord[0]
-            moves = {'U': (pRow - 1, pCol), 'R': (pRow, pCol + 1), 'D': (pRow + 1, pCol), 'L': (pRow - 1, pCol)}
-            shortest = min(moves, key=lambda k: abs(moves[k][0] - pacmanX) + abs(moves[k][1] - pacmanY)) #what happens if same?
+        rslt = deepcopy(state)
+        posDict = rslt.pos_dict
+        pCords = posDict['pacman'][0]
+        rslt_pCords = vector_add(pCords, self.directions[action])
+        rslt_pCords = pacmanX, pacmanY = pCords if rslt.gridDict[rslt_pCords] == State.wall else rslt_pCords
+        # move pacman
+        rslt.gridDict[pCords], rslt.gridDict[rslt_pCords] = State.cell, State.pacman  # old = cell, new = pacman
+        posDict['pacman'][0] = rslt_pCords  # updates posDict
+        for ghost, cord in {k:v for k,v in posDict['ghosts'].items() if v}.items():  # order by ghost order
+            # checks if cord empty
+            gCords = pRow, pCol = cord[0]
+            # moves = {'U': (pRow - 1, pCol), 'R': (pRow, pCol + 1), 'D': (pRow + 1, pCol), 'L': (pRow - 1, pCol)}
+            moves = {key: vector_add(gCords, val) for key, val in self.directions.items() if
+                     rslt.gridDict[vector_add(gCords, val)] not in [State.wall] + list(posDict['ghosts'].values())}
+            # filters movement to walls.
+            # shortestKey = min(moves, key=lambda k: abs(moves[k][0] - pacmanX) + abs(moves[k][1] - pacmanY))
+            shortest = min(list(moves.values()), key=lambda v: abs(v[0] - pacmanX) + abs(v[1] - pacmanY))
+            # what happens if same minimum? gets first min, since order is by directions, shoud be ok
+
+            if (rslt.gridDict[shortest] == State.poison[0]):  # with pill
+                rslt.gridDict[shortest] = State.pills[0]
+                del posDict['ghosts'][ghost]
+                # delete ghost and keep pill
+
+            elif rslt.gridDict[shortest] == State.poison[1]:  # no pill
+                rslt.gridDict[shortest] = State.cell
+                del posDict['ghosts'][ghost]
+            else:  # empty cell
+                rslt.gridDict[shortest] = (rslt.gridDict[shortest] % 10) + (
+                        rslt.gridDict[gCords] - rslt.gridDict[gCords] % 10)  # changes empty cell to ghost with no pill
+                posDict['ghosts'][ghost] = shortest  # updates posDict
+
+            rslt.gridDict[gCords] = rslt.gridDict[gCords] - (rslt.gridDict[gCords] // 10) * 10 + 10
+            # old cords gets update
+            # old = pill\empty, new = ghost
 
     def goal_test(self, state):
         """ Given a state, checks if this is the goal state, compares to the created goal state"""
