@@ -60,11 +60,12 @@ class PacmanProblem(search.Problem):
         iterator, rather than building them all at once."""
         # define how we do expand in search algo (up,down,left,rigt), for pacman only
         posDict = state.pos_dict
-        pRow, pCol = posDict['pacman'][0]  # returns a list.. (for coherentic method)
-        moves = {'U': (pRow - 1, pCol), 'R': (pRow, pCol + 1), 'D': (pRow + 1, pCol), 'L': (pRow - 1, pCol)}
-        for action, cord in moves:
-            if (cord not in posDict['walls']) and (cord not in list(posDict['ghosts'].values())) and (
-                    cord not in posDict['poison']):
+        pCords = pRow, pCol = posDict['pacman'][0]  # returns a list.. (for coherentic method)
+        # moves = {'U': (pRow - 1, pCol), 'R': (pRow, pCol + 1), 'D': (pRow + 1, pCol), 'L': (pRow - 1, pCol)}
+        # moves = {key:vector_add(pCords,val) for key,val in self.directions.items()}
+        for action, dir in self.directions.items():
+            cord = vector_add(pCords, dir)
+            if (cord not in list(posDict['ghosts'].values())) and (cord not in posDict['poison']):
                 yield action
 
     def result(self, state, action):
