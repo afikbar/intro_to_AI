@@ -45,6 +45,9 @@ class State(object):
     def __hash__(self):
         return hash(hashabledict(self.gridDict))  # consider adding hash for ghosts cnt\dist?
 
+    def __iter__(self):
+        return iter(self.gridDict)
+
 
 class PacmanProblem(search.Problem):
     """This class implements a spaceship problem"""
