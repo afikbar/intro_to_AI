@@ -125,6 +125,7 @@ class PacmanProblem(search.Problem):
 
     def goal_test(self, state):
         """ Given a state, checks if this is the goal state, compares to the created goal state"""
+        return state._pillCnt == 0
 
     def h(self, node):
         """ This is the heuristic. It gets a node (not a state,
