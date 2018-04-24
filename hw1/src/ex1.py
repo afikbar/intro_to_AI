@@ -89,9 +89,13 @@ class PacmanProblem(search.Problem):
         rslt_pCords = vector_add(pCords, self.directions[action])
         rslt_pCords = pacmanX, pacmanY = pCords if rslt.gridDict[rslt_pCords] == State.wall else rslt_pCords
         # move pacman
+        if rslt.gridDict[rslt_pCords] == State.pills[0]:
+            rslt._pillCnt = rslt._pillCnt - 1
+            rslt.pos_dict['pills'].remove(rslt_pCords)
         rslt.gridDict[pCords], rslt.gridDict[rslt_pCords] = State.cell, State.pacman  # old = cell, new = pacman
         posDict['pacman'][0] = rslt_pCords  # updates posDict
-        for ghost, cord in {k:v for k,v in posDict['ghosts'].items() if v}.items():  # order by ghost order
+
+        for ghost, cord in {k: v for k, v in posDict['ghosts'].items() if v}.items():  # order by ghost order
             # checks if cord empty
             gCords = pRow, pCol = cord[0]
             # moves = {'U': (pRow - 1, pCol), 'R': (pRow, pCol + 1), 'D': (pRow + 1, pCol), 'L': (pRow - 1, pCol)}
