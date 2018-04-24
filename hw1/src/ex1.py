@@ -42,6 +42,18 @@ class State(object):
     def __eq__(self, other):
         return isinstance(other, State) and self.gridDict == other.gridDict
 
+    def __lt__(self, other):
+        return hashabledict(self.gridDict).__lt__(hashabledict(other.gridDict))
+
+    def __gt__(self, other):
+        return hashabledict(self.gridDict).__gt__(hashabledict(other.gridDict))
+
+    def __le__(self, other):
+        return hashabledict(self.gridDict).__le__(hashabledict(other.gridDict))
+
+    def __ge__(self, other):
+        return hashabledict(self.gridDict).__ge__(hashabledict(other.gridDict))
+
     def __hash__(self):
         return hash(hashabledict(self.gridDict))  # consider adding hash for ghosts cnt\dist?
 
