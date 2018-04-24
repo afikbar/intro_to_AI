@@ -85,7 +85,10 @@ class PacmanProblem(search.Problem):
         # min(man_dist to pacman from one of the available slots)
         rslt = State(None, state)
         posDict = rslt.pos_dict
+        # try:
         pCords = posDict['pacman'][0]
+        # except Exception as e:
+        #     print("error",e)
         rslt_pCords = vector_add(pCords, self.directions[action])
         rslt_pCords = pacmanX, pacmanY = pCords if rslt.gridDict[rslt_pCords] == State.wall else rslt_pCords
         # move pacman
