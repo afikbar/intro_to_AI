@@ -11,27 +11,33 @@ class State(object):
     wall, pacman, cell = 99, 66, 10
     pills, poison = [11, 21, 31, 41, 51, 71], [71, 77]
     bGhost, yGhost, gGhost, rGhost = [20, 21], [30, 31], [40, 41], [50, 51]
+    eatenBy = 88
 
-    def __init__(self, grid):
-        self.gridDict = {(x, y): ele for x, row in enumerate(grid) for y, ele in enumerate(row)}
-        # lookup = {66: 'pacman', 11: 'pills', 21: 'pills', 31: 'pills', 41: 'pills', 51: 'pills', 71: 'pills'}
-        # posDtst = {}
-        # for key, value in sorted(d.items()):
-        #     posDtst.setdefault(value, []).append(key)
-        self.pos_dict = {
-            'pacman': [(x, y) for x, row in enumerate(grid) for y, ele in enumerate(row) if ele == self.pacman],
-            'pills': [(x, y) for x, row in enumerate(grid) for y, ele in enumerate(row) if ele in self.pills],
-            'ghosts': {
-                'red': [(x, y) for x, row in enumerate(grid) for y, ele in enumerate(row) if ele in self.rGhost],
-                'blue': [(x, y) for x, row in enumerate(grid) for y, ele in enumerate(row) if ele in self.bGhost],
-                'yellow': [(x, y) for x, row in enumerate(grid) for y, ele in enumerate(row) if ele in self.yGhost],
-                'green': [(x, y) for x, row in enumerate(grid) for y, ele in enumerate(row) if ele in self.gGhost]
-            },
-            'poison': [(x, y) for x, row in enumerate(grid) for y, ele in enumerate(row) if ele in self.poison],
-            'walls': [(x, y) for x, row in enumerate(grid) for y, ele in enumerate(row) if ele == self.wall]
-        }
+    def __init__(self, grid=None, state=None):
+        if state:
+            self.gridDict = deepcopy(state.gridDict)
+            self.pos_dict = deepcopy(state.pos_dict)
+            self._pillCnt = deepcopy(state._pillCnt)
+        elif grid:
+            self.gridDict = {(x, y): ele for x, row in enumerate(grid) for y, ele in enumerate(row)}
+            # lookup = {66: 'pacman', 11: 'pills', 21: 'pills', 31: 'pills', 41: 'pills', 51: 'pills', 71: 'pills'}
+            # posDtst = {}
+            # for key, value in sorted(d.items()):
+            #     posDtst.setdefault(value, []).append(key)
+            self.pos_dict = {
+                'pacman': [(x, y) for x, row in enumerate(grid) for y, ele in enumerate(row) if ele == self.pacman],
+                'pills': [(x, y) for x, row in enumerate(grid) for y, ele in enumerate(row) if ele in self.pills],
+                'ghosts': {
+                    'red': [(x, y) for x, row in enumerate(grid) for y, ele in enumerate(row) if ele in self.rGhost],
+                    'blue': [(x, y) for x, row in enumerate(grid) for y, ele in enumerate(row) if ele in self.bGhost],
+                    'yellow': [(x, y) for x, row in enumerate(grid) for y, ele in enumerate(row) if ele in self.yGhost],
+                    'green': [(x, y) for x, row in enumerate(grid) for y, ele in enumerate(row) if ele in self.gGhost]
+                },
+                'poison': [(x, y) for x, row in enumerate(grid) for y, ele in enumerate(row) if ele in self.poison],
+                'walls': [(x, y) for x, row in enumerate(grid) for y, ele in enumerate(row) if ele == self.wall]
+            }
 
-        self._pillCnt = len(self.pos_dict['pills'])
+            self._pillCnt = len(self.pos_dict['pills'])
 
     def __eq__(self, other):
         return isinstance(other, State) and self.gridDict == other.gridDict
