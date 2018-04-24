@@ -105,23 +105,31 @@ class PacmanProblem(search.Problem):
             # shortestKey = min(moves, key=lambda k: abs(moves[k][0] - pacmanX) + abs(moves[k][1] - pacmanY))
             shortest = min(list(moves.values()), key=lambda v: abs(v[0] - pacmanX) + abs(v[1] - pacmanY))
             # what happens if same minimum? gets first min, since order is by directions, shoud be ok
-
+            # if shortest is null means ghost stuck
             if (rslt.gridDict[shortest] == State.poison[0]):  # with pill
                 rslt.gridDict[shortest] = State.pills[0]
                 del posDict['ghosts'][ghost]
+                rslt.pos_dict['poison'].remove(shortest)
                 # delete ghost and keep pill
 
             elif rslt.gridDict[shortest] == State.poison[1]:  # no pill
                 rslt.gridDict[shortest] = State.cell
                 del posDict['ghosts'][ghost]
-            else:  # empty cell
+                rslt.pos_dict['poison'].remove(shortest)
+
+            elif rslt.gridDict[shortest] == State.pacman:  # eats pacman
+                rslt.gridDict[shortest] = State.eatenBy
+                # TODO:what else??
+            else:  # empty cell maybe with pill
                 rslt.gridDict[shortest] = (rslt.gridDict[shortest] % 10) + (
                         rslt.gridDict[gCords] - rslt.gridDict[gCords] % 10)  # changes empty cell to ghost with no pill
-                posDict['ghosts'][ghost] = shortest  # updates posDict
+                posDict['ghosts'][ghost][0] = shortest  # updates posDict
 
             rslt.gridDict[gCords] = rslt.gridDict[gCords] - (rslt.gridDict[gCords] // 10) * 10 + 10
             # old cords gets update
             # old = pill\empty, new = ghost
+
+            return rslt
 
     def goal_test(self, state):
         """ Given a state, checks if this is the goal state, compares to the created goal state"""
