@@ -39,6 +39,14 @@ class State(object):
 
             self._pillCnt = len(self.pos_dict['pills'])
 
+    @property
+    def pillCnt(self):
+        return self._pillCnt
+
+    @pillCnt.setter
+    def pillCnt(self, val):
+        self._pillCnt=val
+
     def __eq__(self, other):
         return isinstance(other, State) and self.gridDict == other.gridDict
 
@@ -105,7 +113,7 @@ class PacmanProblem(search.Problem):
         rslt_pCords = pacmanX, pacmanY = pCords if rslt.gridDict[rslt_pCords] == State.wall else rslt_pCords
         # move pacman
         if rslt.gridDict[rslt_pCords] == State.pills[0]:
-            rslt._pillCnt = rslt._pillCnt - 1
+            rslt.pillCnt = rslt.pillCnt-1
             rslt.pos_dict['pills'].remove(rslt_pCords)
         rslt.gridDict[pCords], rslt.gridDict[rslt_pCords] = State.cell, State.pacman  # old = cell, new = pacman
         posDict['pacman'][0] = rslt_pCords  # updates posDict
@@ -148,14 +156,14 @@ class PacmanProblem(search.Problem):
 
     def goal_test(self, state):
         """ Given a state, checks if this is the goal state, compares to the created goal state"""
-        return state._pillCnt == 0
+        return state.pillCnt == 0
 
     def h(self, node):
         """ This is the heuristic. It gets a node (not a state,
         state can be accessed via node.state)
         and returns a goal distance estimate"""
-        return node.state._pillCnt
-
+        return node.state.pillCnt
+        # return 0
 
     """Feel free to add your own functions"""
 
