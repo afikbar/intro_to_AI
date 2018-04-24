@@ -83,7 +83,7 @@ class PacmanProblem(search.Problem):
         self.actions(state)."""
         # ghosts moves here, as "result" from pacman action (moves towards pacman's new pos)
         # min(man_dist to pacman from one of the available slots)
-        rslt = deepcopy(state)
+        rslt = State(None, state)
         posDict = rslt.pos_dict
         pCords = posDict['pacman'][0]
         rslt_pCords = vector_add(pCords, self.directions[action])
