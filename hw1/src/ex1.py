@@ -72,7 +72,7 @@ class State(object):
 
 class PacmanProblem(search.Problem):
     """This class implements a spaceship problem"""
-    directions = {'R': (0, 1), 'D': (1, 0), 'L': (- 1, 0), 'U': (- 1, 0)}  # order matters
+    directions = {'R': (0, 1), 'D': (1, 0), 'L': (0, -1), 'U': (- 1, 0)}  # order matters
 
     def __init__(self, initial):
         """Don't forget to set the goal or implement the goal test
