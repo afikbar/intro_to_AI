@@ -1,6 +1,7 @@
 import search
 import random
 import math
+import sys
 from utils import hashabledict, vector_add
 from copy import deepcopy
 
@@ -162,8 +163,12 @@ class PacmanProblem(search.Problem):
         """ This is the heuristic. It gets a node (not a state,
         state can be accessed via node.state)
         and returns a goal distance estimate"""
+        # TODO: prefer board where ghosts are near poison+pill?
+        # TODO: prefer eat pills in direction of ghosts and then runaway?
+        # TODO: remove "bad effect" to gain best estimate (i.e. duplicate positions without deleteing)
+        if node.state.gridDict[node.state.pos_dict['pacman'][0]] == State.eatenBy:
+            return sys.maxsize
         return node.state.pillCnt
-        # return 0
 
     """Feel free to add your own functions"""
 
