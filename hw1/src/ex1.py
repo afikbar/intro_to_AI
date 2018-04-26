@@ -145,7 +145,7 @@ class PacmanProblem(search.Problem):
         # define how we do expand in search algo (up,down,left,rigt), for pacman only
         p_cords = state.pacman
         if state.grid[p_cords] == EATEN_BY:
-            return
+            return []
         for action, step in DIRECTIONS.items():
             cord = vector_add(p_cords, step)  # adds tuples element-wise
             ghosts_md = map(lambda g_cord: abs(g_cord[0] - cord[0]) + abs(g_cord[1] - cord[1]), state.ghosts.values())
@@ -158,7 +158,6 @@ class PacmanProblem(search.Problem):
         action in the given state. The action must be one of
         self.actions(state)."""
         # ghosts moves here, as "result" from pacman action (moves towards pacman's new pos)
-        # min(man_dist to pacman from one of the available slots)
         rslt = deepcopy(state)
         p_cords = state.pacman
         if rslt.grid[p_cords] == EATEN_BY:  # if pacman was eaten dont play
@@ -173,7 +172,7 @@ class PacmanProblem(search.Problem):
         rslt.pacman = rslt_p_cords  # updates position
 
         # move ghosts:
-        for ghost, g_cords in rslt.ghosts.items():  # order by ghost order
+        for ghost, g_cords in state.ghosts.items():  # order by ghost order
             # checks if ghost empty
             moves = {key: vector_add(g_cords, val) for key, val in DIRECTIONS.items() if
                      rslt.grid[vector_add(g_cords, val)] not in [WALL] + list(rslt.ghosts.values())}
@@ -211,7 +210,7 @@ class PacmanProblem(search.Problem):
             rslt.grid[g_cords] = rslt.grid[g_cords] - ghost + 10
             # old cords gets update
             # old = pill\empty, new = ghost
-            return rslt
+        return rslt
 
     def goal_test(self, state):
         """ Given a state, checks if this is the goal state, compares to the created goal state"""
