@@ -23,6 +23,7 @@ class State(object):
     def __init__(self, grid):
         State.last_state = State.last_state + 1
         self._state_num = State.last_state
+
         self._gridDict = {(x, y): ele for x, row in enumerate(grid) for y, ele in enumerate(row)}
         self._pacman = next((cord for cord, ele in self._gridDict.items() if ele == PACMAN), None)
         self._pills = [cord for cord, ele in self._gridDict.items() if ele in PILLS]
@@ -121,9 +122,9 @@ class PacmanProblem(search.Problem):
         You should change the initial to your own representation"""
         # receives the input from main in check.py
         self._size = (len(initial), len(initial[0]))  # size (rows,cols)
-        self._firstState = State(initial)
-        self.currState = self._firstState
-        search.Problem.__init__(self, self._firstState)  # we can change the initial (world as we see it)
+        self._first_state = State(initial)
+        self._crnt_state = self._first_state
+        search.Problem.__init__(self, self._first_state)  # we can change the initial (world as we see it)
 
     def actions(self, state):
         """Return the actions that can be executed in the given
