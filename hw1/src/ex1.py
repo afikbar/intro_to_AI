@@ -113,6 +113,17 @@ class State(object):
             print(ele, ", ", end='')
         print("\n")
 
+    @property
+    def closest_pill(self):
+        curr_cords = self._pacman
+        pills = deepcopy(self._pills)
+        man_dist = lambda cord: abs(cord[0] - curr_cords[0]) + abs(cord[1] - curr_cords[1])
+        while pills:
+            closest_pill = min(pills, key=man_dist)
+            yield man_dist(closest_pill)
+            pills.remove(closest_pill)
+        return
+
 
 class PacmanProblem(search.Problem):
     """This class implements a spaceship problem"""
@@ -210,13 +221,16 @@ class PacmanProblem(search.Problem):
         """ This is the heuristic. It gets a node (not a state,
         state can be accessed via node.state)
         and returns a goal distance estimate"""
+        state = node.state
         # TODO: prefer board where ghosts are near poison+pill?
         # TODO: prefer eat pills in direction of ghosts and then runaway?
         # TODO: remove "bad effect" to gain best estimate (i.e. duplicate positions without deleteing)
-        if node.state.grid[node.state.pacman] == EATEN_BY:
+        # find estimated closest pill using MD:
+        pills_md_sum = sum(state.closest_pill)
+        if state.grid[state.pacman] == EATEN_BY:
             return sys.maxsize
-        return node.state.pill_count
-
+        return pills_md_sum
+        # return state.pill_count
     """Feel free to add your own functions"""
 
 
