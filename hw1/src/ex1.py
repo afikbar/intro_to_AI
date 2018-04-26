@@ -137,7 +137,9 @@ class PacmanProblem(search.Problem):
             return
         for action, step in DIRECTIONS.items():
             cord = vector_add(p_cords, step)  # adds tuples element-wise
-            if (cord not in list(state.ghosts.values())) and (cord not in POISON):
+            ghosts_md = map(lambda g_cord: abs(g_cord[0] - cord[0]) + abs(g_cord[1] - cord[1]), state.ghosts.values())
+            # keeping 2 steps away from ghost at all time (ghost plays after pacman)
+            if all(dist >= 2 for dist in ghosts_md) and (cord not in POISON):
                 yield action
 
     def result(self, state, action):
@@ -150,8 +152,8 @@ class PacmanProblem(search.Problem):
         p_cords = state.pacman
         if rslt.grid[p_cords] == EATEN_BY:  # if pacman was eaten dont play
             return rslt
-        rslt_p_cords = vector_add(p_cords, DIRECTIONS[action])
-        rslt_p_cords = p_cords if rslt.grid[rslt_p_cords] == WALL else rslt_p_cords
+        rslt_p_cords = vector_add(p_cords, DIRECTIONS[action])  # gets aimed cell
+        rslt_p_cords = p_cords if rslt.grid[rslt_p_cords] == WALL else rslt_p_cords  # checks if WALL
         # move pacman:
         if rslt.grid[rslt_p_cords] == PILLS[0]:
             rslt.pill_count -= 1
