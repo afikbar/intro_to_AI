@@ -1,7 +1,7 @@
 import search
 import random
 import math
-import sys
+import sys, collections
 from utils import hashabledict, vector_add
 from copy import deepcopy
 
@@ -135,7 +135,28 @@ class PacmanProblem(search.Problem):
         self._size = (len(initial), len(initial[0]))  # size (rows,cols)
         self._first_state = State(initial)
         self._crnt_state = self._first_state
+        self._tree = self.build_shortest()
         search.Problem.__init__(self, self._first_state)  # we can change the initial (world as we see it)
+
+    def build_shortest(self):
+        return {pill: self.bfs(pill) for pill in self._first_state.pills}
+
+    def bfs(self, start_pos):
+        grid = self._first_state.grid
+        tree = {cord: sys.maxsize for cord in grid.keys() if cord not in self._first_state.walls}
+        visited, queue = set(), collections.deque([start_pos])
+        d = 0
+        tree[start_pos] = 0
+        while queue:
+            u = queue.popleft()  # front element
+            visited.add(u)
+            u_adj = [vector_add(u, step) for step in DIRECTIONS.values() if grid[vector_add(u, step)] != WALL]
+            for v in u_adj:
+                if v not in visited:
+                    visited.add(v)
+                    tree[v] = tree[u] + 1
+                    queue.append(v)
+        return tree
 
     def actions(self, state):
         """Return the actions that can be executed in the given
@@ -225,8 +246,20 @@ class PacmanProblem(search.Problem):
         state = node.state
         if state.pacman is None or state.grid[state.pacman] == EATEN_BY:
             return sys.maxsize
+        # find pills real distance path sum:
+        pills = deepcopy(state.pills)
+        pills_real_dist_sum = 0
+        curr = state.pacman
+        while pills:
+            closest = min(pills, key=lambda pill: self._tree[pill][curr])
+            pills_real_dist_sum += self._tree[closest][curr]
+            pills.remove(closest)
+            curr = closest
+
         # find estimated closest pill using MD:
-        return sum(state.closest_pill())
+        # return sum(state.closest_pill())
+        return pills_real_dist_sum
+
     """Feel free to add your own functions"""
 
 
