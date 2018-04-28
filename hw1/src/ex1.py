@@ -144,8 +144,9 @@ class PacmanProblem(search.Problem):
         iterator, rather than building them all at once."""
         # define how we do expand in search algo (up,down,left,rigt), for pacman only
         p_cords = state.pacman
-        if state.grid[p_cords] == EATEN_BY:
-            return []
+        if p_cords is None or state.grid[p_cords] == EATEN_BY:
+            # raise StopIteration # weird error with this
+            return
         for action, step in DIRECTIONS.items():
             cord = vector_add(p_cords, step)  # adds tuples element-wise
             ghosts_md = map(lambda g_cord: abs(g_cord[0] - cord[0]) + abs(g_cord[1] - cord[1]), state.ghosts.values())
@@ -158,6 +159,7 @@ class PacmanProblem(search.Problem):
         action in the given state. The action must be one of
         self.actions(state)."""
         # ghosts moves here, as "result" from pacman action (moves towards pacman's new pos)
+        self._crnt_state = state  # debugging
         rslt = deepcopy(state)
         p_cords = state.pacman
         if rslt.grid[p_cords] == EATEN_BY:  # if pacman was eaten dont play
@@ -172,7 +174,7 @@ class PacmanProblem(search.Problem):
         rslt.pacman = rslt_p_cords  # updates position
 
         # move ghosts:
-        for ghost, g_cords in state.ghosts.items():  # order by ghost order
+        for ghost, g_cords in state.ghosts.items():  # order by ghost order (3.6+ dict keeps init order)
             # checks if ghost empty
             moves = {key: vector_add(g_cords, val) for key, val in DIRECTIONS.items() if
                      rslt.grid[vector_add(g_cords, val)] not in [WALL] + list(rslt.ghosts.values())}
@@ -181,7 +183,7 @@ class PacmanProblem(search.Problem):
             try:
                 shortest = min(list(moves.values()),
                                key=lambda v: abs(v[0] - rslt.pacman[0]) + abs(v[1] - rslt.pacman[1]))
-                # what happens if same minimum? gets first min, since order is by DIRECTIONS, shoud be ok
+                # what happens if same minimum? gets first min, since order is by DIRECTIONS(3.6+ dict keeps init order)
             except ValueError:
                 continue
             # if shortest is null means ghost stuck
@@ -226,7 +228,7 @@ class PacmanProblem(search.Problem):
         # TODO: remove "bad effect" to gain best estimate (i.e. duplicate positions without deleteing)
         # find estimated closest pill using MD:
         pills_md_sum = sum(state.closest_pill)
-        if state.grid[state.pacman] == EATEN_BY:
+        if state.pacman is None or state.grid[state.pacman] == EATEN_BY:
             return sys.maxsize
         return pills_md_sum
         # return state.pill_count
