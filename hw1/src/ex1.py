@@ -268,6 +268,7 @@ class PacmanProblem(search.Problem):
         state = node.state
         if state.pacman is None or state.grid[state.pacman] == EATEN_BY:
             return sys.maxsize
+
         # find furthest pills:
         # pills2 = deepcopy(state.pills)
         # furthest_pills = max(self._tree.values(), key=lambda pill: max(pill.values()))
@@ -283,6 +284,11 @@ class PacmanProblem(search.Problem):
 
         ghost_md_pacman = sum(
             map(lambda ghost: abs(ghost[0] - state.pacman[0]) + abs(ghost[1] - state.pacman[1]), state.ghosts.values()))
+
+        ghost_md_ghost = 0
+        for ghost1 in state.ghosts.values():  # manhattan distance from ghost to ghosts
+            ghost_md_ghost += sum(
+                map(lambda ghost2: abs(ghost1[0] - ghost2[0]) + abs(ghost1[1] - ghost2[1]), state.ghosts.values()))
 
         # find pills real distance path sum:
         pills = deepcopy(state.pills)
@@ -304,7 +310,8 @@ class PacmanProblem(search.Problem):
 
         # find estimated closest pill using MD:
         # return sum(state.closest_pill())
-        return pills_real_dist_sum
+        # return pills_real_dist_sum + state.pill_count + heuristic_weight + g_md_poison
+        return pills_real_dist_sum + heuristic_weight + g_md_poison - ghost_md_pacman + ghost_md_ghost
 
     """Feel free to add your own functions"""
 
