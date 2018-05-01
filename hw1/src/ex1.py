@@ -268,6 +268,11 @@ class PacmanProblem(search.Problem):
         state = node.state
         if state.pacman is None or state.grid[state.pacman] == EATEN_BY:
             return sys.maxsize
+        # find furthest pills:
+        # pills2 = deepcopy(state.pills)
+        # furthest_pills = max(self._tree.values(), key=lambda pill: max(pill.values()))
+        # max(self._tree, key=lambda pill: max(pill.values(), key=lambda dict: dict.values()))
+        # for pill_pos, pill_dict in self._tree.items():
         # find pills real distance path sum:
         pills = deepcopy(state.pills)
         pills_real_dist_sum = 0
