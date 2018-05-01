@@ -98,7 +98,7 @@ class State(object):
         return isinstance(other, State) and self._gridDict.__eq__(other.grid)
 
     def __lt__(self, other):
-        return isinstance(other, State) and self._pill_count.__lt__(other.pill_count)
+        return isinstance(other, State) and (self._pill_count.__gt__(other.pill_count))
 
     def __hash__(self):
         return hash(hashabledict(self._gridDict))  # consider adding hash for ghosts cnt\dist?
