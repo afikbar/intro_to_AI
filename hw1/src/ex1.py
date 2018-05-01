@@ -188,7 +188,9 @@ class PacmanProblem(search.Problem):
             return
         for action, step in DIRECTIONS.items():
             cord = vector_add(p_cords, step)  # adds tuples element-wise
-            ghosts_md = map(lambda g_cord: abs(g_cord[0] - cord[0]) + abs(g_cord[1] - cord[1]), state.ghosts.values())
+            t_cord = p_cords if state.grid[cord] == WALL else cord  # checks if WALL
+            ghosts_md = map(lambda g_cord: abs(g_cord[0] - t_cord[0]) + abs(g_cord[1] - t_cord[1]),
+                            state.ghosts.values())
             # keeping 2 steps away from ghost at all time (ghost plays after pacman)
             if all(dist >= 2 for dist in ghosts_md) and (cord not in POISON):
                 yield action
