@@ -278,6 +278,12 @@ class PacmanProblem(search.Problem):
         for ghost in state.ghosts.values():  # manhattan distance from ghost to poison+pill
             g_md_poison += sum(map(lambda pois: abs(ghost[0] - pois[0]) + abs(ghost[1] - pois[1]), state.poison))
         heuristic_weight = g_md_poison * len([x for x in state.poison if x == POISON[0]])  # count pills with poison
+        # if node.parent is not None and state.pacman == node.parent.state.pacman:
+        #     heuristic_weight += 2
+
+        ghost_md_pacman = sum(
+            map(lambda ghost: abs(ghost[0] - state.pacman[0]) + abs(ghost[1] - state.pacman[1]), state.ghosts.values()))
+
         # find pills real distance path sum:
         pills = deepcopy(state.pills)
         pills_real_dist_sum = 0
