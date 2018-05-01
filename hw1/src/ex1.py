@@ -133,7 +133,7 @@ class State(object):
             u = queue.popleft()  # front element
             visited.add(u)
             u_adj = [vector_add(u, step) for step in DIRECTIONS.values() if
-                     grid[vector_add(u, step)] not in [WALL, POISON] + R_GHOST + B_GHOST + Y_GHOST + G_GHOST]
+                     grid[vector_add(u, step)] not in [WALL] + POISON + R_GHOST + B_GHOST + Y_GHOST + G_GHOST]
             for v in u_adj:
                 if v not in visited:
                     if v == end:
