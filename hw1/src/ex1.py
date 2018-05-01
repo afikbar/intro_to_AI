@@ -218,7 +218,7 @@ class PacmanProblem(search.Problem):
         for ghost, g_cords in state.ghosts.items():  # order by ghost order (3.6+ dict keeps init order)
             # checks if ghost empty
             moves = {key: vector_add(g_cords, val) for key, val in DIRECTIONS.items() if
-                     rslt.grid[vector_add(g_cords, val)] not in [WALL] + list(rslt.ghosts.values())}
+                     rslt.grid[vector_add(g_cords, val)] not in [WALL] + B_GHOST + Y_GHOST + G_GHOST + R_GHOST}
             # filters movement to walls.
             # get "shortest" move:
             try:
@@ -227,7 +227,7 @@ class PacmanProblem(search.Problem):
                 # what happens if same minimum? gets first min, since order is by DIRECTIONS(3.6+ dict keeps init order)
             except ValueError:
                 continue
-            # if shortest is null means ghost stuck
+            # if shortest is null means ghost stuck (thus do nothing)
 
             if rslt.grid[shortest] == POISON[0]:  # poison + pill
                 rslt.grid[shortest] = PILLS[0]
@@ -253,6 +253,8 @@ class PacmanProblem(search.Problem):
             rslt.grid[g_cords] = rslt.grid[g_cords] - ghost + 10
             # old cords gets update
             # old = pill\empty, new = ghost
+        rslt._state_num += 1
+        # rslt.print()
         return rslt
 
     def goal_test(self, state):
