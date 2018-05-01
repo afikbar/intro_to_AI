@@ -1,6 +1,4 @@
 import search
-import random
-import math
 import sys, collections
 from utils import hashabledict, vector_add
 from copy import deepcopy
@@ -15,16 +13,16 @@ EATEN_BY = 88
 DIRECTIONS = {'R': (0, 1), 'D': (1, 0), 'L': (0, -1), 'U': (- 1, 0)}  # order matters
 
 
+def man_dist(start: tuple, end: tuple) -> int:
+    return abs(start[0] - end[0]) + abs(start[1] - end[1])
+
+
 class State(object):
-    # TODO: rethink state object (remove static vars, getters\setters for pos, etc)
-    # TODO: design as Predicats? atoms of True.
-    last_state = 0  # static
 
     def __init__(self, grid):
-        State.last_state = State.last_state + 1
-        self._state_num = State.last_state
 
         self._gridDict = {(x, y): ele for x, row in enumerate(grid) for y, ele in enumerate(row)}
+        self.cell_cnt = {cord: 0 for cord in self._gridDict}
         self._pacman = next((cord for cord, ele in self._gridDict.items() if ele == PACMAN), None)
         self._pills = [cord for cord, ele in self._gridDict.items() if ele in PILLS]
         self._poison = [cord for cord, ele in self._gridDict.items() if ele in POISON]
@@ -98,12 +96,13 @@ class State(object):
         return isinstance(other, State) and self._gridDict.__eq__(other.grid)
 
     def __lt__(self, other):
-        return isinstance(other, State) and (self._pill_count.__gt__(other.pill_count))
+        return isinstance(other, State) and (self._pill_count.__lt__(other.pill_count))
 
     def __hash__(self):
         return hash(hashabledict(self._gridDict))  # consider adding hash for ghosts cnt\dist?
 
     def print(self, depth=0):
+        temp = sys.stdout
         sys.stdout = open("temp.txt", 'a')
         print(" State {}:\n".format(depth))
         row = 0
@@ -113,14 +112,17 @@ class State(object):
                 row = row + 1
             print(ele, ", ", end='')
         print("\n")
+        sys.stdout.close()
+        sys.stdout = temp
 
     def closest_pill(self):
         curr = self._pacman
         pills = deepcopy(self._pills)
-        man_dist = lambda cord: abs(cord[0] - curr[0]) + abs(cord[1] - curr[1])
+        # man_dist = lambda cord: abs(cord[0] - curr[0]) + abs(cord[1] - curr[1])
         while pills:
-            closest_pill = min(pills, key=man_dist)
-            yield man_dist(closest_pill)
+            closest_pill = min(pills, key=lambda pill: man_dist(curr, pill))
+            if self.grid[closest_pill] not in POISON:
+                yield man_dist(closest_pill, curr)
             pills.remove(closest_pill)
             curr = closest_pill
         return
@@ -189,10 +191,10 @@ class PacmanProblem(search.Problem):
         for action, step in DIRECTIONS.items():
             cord = vector_add(p_cords, step)  # adds tuples element-wise
             t_cord = p_cords if state.grid[cord] == WALL else cord  # checks if WALL
-            ghosts_md = map(lambda g_cord: abs(g_cord[0] - t_cord[0]) + abs(g_cord[1] - t_cord[1]),
-                            state.ghosts.values())
+            ghosts_md = [man_dist(t_cord, g_cord) for g_cord in state.ghosts.values()]
             # keeping 2 steps away from ghost at all time (ghost plays after pacman)
-            if all(dist >= 2 for dist in ghosts_md) and (cord not in POISON):
+            if all(dist >= 2 for dist in ghosts_md) and (
+                    state.grid[cord] not in [WALL] + POISON):  # and state.cell_cnt[cord] < 2:
                 yield action
 
     def result(self, state, action):
@@ -213,6 +215,7 @@ class PacmanProblem(search.Problem):
             rslt.pills.remove(rslt_p_cords)
         rslt.grid[p_cords], rslt.grid[rslt_p_cords] = CELL, PACMAN  # old = cell, new = pacman
         rslt.pacman = rslt_p_cords  # updates position
+        rslt.cell_cnt[rslt_p_cords] += 1
 
         # move ghosts:
         for ghost, g_cords in state.ghosts.items():  # order by ghost order (3.6+ dict keeps init order)
@@ -222,8 +225,7 @@ class PacmanProblem(search.Problem):
             # filters movement to walls.
             # get "shortest" move:
             try:
-                shortest = min(list(moves.values()),
-                               key=lambda v: abs(v[0] - rslt.pacman[0]) + abs(v[1] - rslt.pacman[1]))
+                shortest = min(list(moves.values()), key=lambda v: man_dist(rslt.pacman, v))
                 # what happens if same minimum? gets first min, since order is by DIRECTIONS(3.6+ dict keeps init order)
             except ValueError:
                 continue
@@ -243,7 +245,6 @@ class PacmanProblem(search.Problem):
             elif rslt.grid[shortest] == PACMAN:  # eats pacman
                 rslt.grid[shortest] = EATEN_BY
                 rslt.ghosts[ghost] = shortest
-                # TODO:what else??
 
             else:  # empty cell maybe with pill
                 rslt.grid[shortest] = (rslt.grid[shortest] % 10) + ghost  # ghost is x0 ghost id
@@ -253,7 +254,6 @@ class PacmanProblem(search.Problem):
             rslt.grid[g_cords] = rslt.grid[g_cords] - ghost + 10
             # old cords gets update
             # old = pill\empty, new = ghost
-        rslt._state_num += 1
         # rslt.print()
         return rslt
 
@@ -269,49 +269,48 @@ class PacmanProblem(search.Problem):
         if state.pacman is None or state.grid[state.pacman] == EATEN_BY:
             return sys.maxsize
 
-        # find furthest pills:
-        # pills2 = deepcopy(state.pills)
-        # furthest_pills = max(self._tree.values(), key=lambda pill: max(pill.values()))
-        # max(self._tree, key=lambda pill: max(pill.values(), key=lambda dict: dict.values()))
-        # for pill_pos, pill_dict in self._tree.items():
-
         g_md_poison = 0
+        min_ghost_md_poison = sys.maxsize if len(state.ghosts) > 0 else 0  # if there are ghosts init to inf.
         for ghost in state.ghosts.values():  # manhattan distance from ghost to poison+pill
-            g_md_poison += sum(map(lambda pois: abs(ghost[0] - pois[0]) + abs(ghost[1] - pois[1]), state.poison))
-        heuristic_weight = g_md_poison * len([x for x in state.poison if x == POISON[0]])  # count pills with poison
-        # if node.parent is not None and state.pacman == node.parent.state.pacman:
-        #     heuristic_weight += 2
+            ghost_pois_md = [man_dist(ghost, poison) for poison in state.poison if state.grid[poison] == POISON[0]]
+            g_md_poison += sum(ghost_pois_md)
+            min_ghost_md_poison = min(ghost_pois_md + [min_ghost_md_poison])
+        poison_pill_cnt = len([x for x in state.poison if x == POISON[0]])  # count pills with poison
 
-        ghost_md_pacman = sum(
-            map(lambda ghost: abs(ghost[0] - state.pacman[0]) + abs(ghost[1] - state.pacman[1]), state.ghosts.values()))
+        # closest ghost to pacman (L1)
+        min_ghst_md_pacman = min([man_dist(state.pacman, ghost) for ghost in state.ghosts.values()], default=0)
+        if (len(state.ghosts) == 1 and min_ghst_md_pacman == 1 and poison_pill_cnt) or (
+                len(state.ghosts) == 0 and poison_pill_cnt):  # unsolvable
+            return sys.maxsize
 
-        ghost_md_ghost = 0
-        for ghost1 in state.ghosts.values():  # manhattan distance from ghost to ghosts
-            ghost_md_ghost += sum(
-                map(lambda ghost2: abs(ghost1[0] - ghost2[0]) + abs(ghost1[1] - ghost2[1]), state.ghosts.values()))
+        ghost_md_max = 0
+        for ghost1 in state.ghosts.values():  # manhattan distance from ghost to ghosts (clustered)
+            ghost_md = [man_dist(ghost1, ghost2) for ghost2 in state.ghosts.values()]
+            ghost_md_max = max(ghost_md + [ghost_md_max])
 
         # find pills real distance path sum:
         pills = deepcopy(state.pills)
         pills_real_dist_sum = 0
         curr = state.pacman
-        if pills:
+        if pills:  # skips first pill if poison+pill
             closest = min(pills, key=lambda pill: self._tree[pill][curr])
-            if state.grid[closest] != POISON[0]:  # skips first pill if poison+pill
+            if state.grid[closest] != POISON[0] or len(pills) == 1:
                 pills_real_dist_sum = state.maze_dist(curr, closest)
                 curr = closest
             pills.remove(closest)
-        else:
-            return 0  # no pills left - we won?
+
+        elif len(pills) == 0:
+            return 0  # no pills left - we won
+
         while pills:
             closest = min(pills, key=lambda pill: self._tree[pill][curr])
             pills_real_dist_sum += self._tree[closest][curr]
-            pills.remove(closest)
             curr = closest
+            pills.remove(closest)
 
-        # find estimated closest pill using MD:
-        # return sum(state.closest_pill())
-        # return pills_real_dist_sum + state.pill_count + heuristic_weight + g_md_poison
-        return pills_real_dist_sum + heuristic_weight + g_md_poison - ghost_md_pacman + ghost_md_ghost
+        """  minimum steps + min ghost dist(L1) to poison + max dist(L1) between ghosts - ghost dist(L1) from pacman """
+        return pills_real_dist_sum + min_ghost_md_poison + ghost_md_max - min_ghst_md_pacman
+        # return pills_real_dist_sum + g_md_poison + ghost_md_max - ghost_md_pacman
 
     """Feel free to add your own functions"""
 
