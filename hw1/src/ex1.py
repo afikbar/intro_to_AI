@@ -125,6 +125,24 @@ class State(object):
             curr = closest_pill
         return
 
+    def maze_dist(self, start, end):
+        visited, queue = set(), collections.deque([start])
+        grid = self.grid
+        d = 0
+        while queue:
+            u = queue.popleft()  # front element
+            visited.add(u)
+            u_adj = [vector_add(u, step) for step in DIRECTIONS.values() if
+                     grid[vector_add(u, step)] not in [WALL, POISON] + R_GHOST + B_GHOST + Y_GHOST + G_GHOST]
+            for v in u_adj:
+                if v not in visited:
+                    if v == end:
+                        return d + 1
+                    visited.add(v)
+                    queue.append(v)
+            d += 1
+        return sys.maxsize
+
 
 class PacmanProblem(search.Problem):
     """This class implements a spaceship problem"""
@@ -146,7 +164,6 @@ class PacmanProblem(search.Problem):
         grid = self._first_state.grid
         tree = {cord: sys.maxsize for cord in grid.keys() if cord not in self._first_state.walls}
         visited, queue = set(), collections.deque([start_pos])
-        d = 0
         tree[start_pos] = 0
         while queue:
             u = queue.popleft()  # front element
@@ -251,6 +268,14 @@ class PacmanProblem(search.Problem):
         pills = deepcopy(state.pills)
         pills_real_dist_sum = 0
         curr = state.pacman
+        if pills:
+            closest = min(pills, key=lambda pill: self._tree[pill][curr])
+            if state.grid[closest] != POISON[0]:  # skips first pill if poison+pill
+                pills_real_dist_sum = state.maze_dist(curr, closest)
+                curr = closest
+            pills.remove(closest)
+        else:
+            return 0  # no pills left - we won?
         while pills:
             closest = min(pills, key=lambda pill: self._tree[pill][curr])
             pills_real_dist_sum += self._tree[closest][curr]
