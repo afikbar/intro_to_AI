@@ -273,6 +273,11 @@ class PacmanProblem(search.Problem):
         # furthest_pills = max(self._tree.values(), key=lambda pill: max(pill.values()))
         # max(self._tree, key=lambda pill: max(pill.values(), key=lambda dict: dict.values()))
         # for pill_pos, pill_dict in self._tree.items():
+
+        g_md_poison = 0
+        for ghost in state.ghosts.values():  # manhattan distance from ghost to poison+pill
+            g_md_poison += sum(map(lambda pois: abs(ghost[0] - pois[0]) + abs(ghost[1] - pois[1]), state.poison))
+        heuristic_weight = g_md_poison * len([x for x in state.poison if x == POISON[0]])  # count pills with poison
         # find pills real distance path sum:
         pills = deepcopy(state.pills)
         pills_real_dist_sum = 0
