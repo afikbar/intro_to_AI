@@ -103,8 +103,9 @@ class State(object):
     def __hash__(self):
         return hash(hashabledict(self._gridDict))  # consider adding hash for ghosts cnt\dist?
 
-    def print(self):
-        print(" State {}:\n".format(self._state_num))
+    def print(self, depth=0):
+        sys.stdout = open("temp.txt", 'a')
+        print(" State {}:\n".format(depth))
         row = 0
         for cord, ele in self._gridDict.items():
             if row != cord[0]:
