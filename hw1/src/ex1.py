@@ -188,7 +188,7 @@ class PacmanProblem(search.Problem):
         if p_cords is None or state.grid[p_cords] == EATEN_BY:
             # raise StopIteration # weird error with this
             return
-        for action, step in DIRECTIONS.items():
+        for action, step in reversed(list(DIRECTIONS.items())):
             cord = vector_add(p_cords, step)  # adds tuples element-wise
             t_cord = p_cords if state.grid[cord] == WALL else cord  # checks if WALL
             ghosts_md = [man_dist(t_cord, g_cord) for g_cord in state.ghosts.values()]
@@ -308,8 +308,10 @@ class PacmanProblem(search.Problem):
             curr = closest
             pills.remove(closest)
 
+        # if min_ghst_md_pacman > pills_real_dist_sum:
+        #     min_ghst_md_pacman = 0
         """  minimum steps + min ghost dist(L1) to poison + max dist(L1) between ghosts - ghost dist(L1) from pacman """
-        return pills_real_dist_sum + min_ghost_md_poison + ghost_md_max - min_ghst_md_pacman
+        return pills_real_dist_sum + min_ghost_md_poison + ghost_md_max - min_ghst_md_pacman * poison_pill_cnt / (node.depth+1)
         # return pills_real_dist_sum + g_md_poison + ghost_md_max - ghost_md_pacman
 
     """Feel free to add your own functions"""
