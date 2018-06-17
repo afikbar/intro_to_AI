@@ -1,10 +1,7 @@
-import time
-import random
 import sys, collections
-from utils import hashabledict, vector_add
-from copy import deepcopy
+from utils import vector_add
 
-ids = ["111111111", "111111111"]
+ids = ["311121289", "961151147"]
 
 WALL, PACMAN, CELL = 99, 66, 10
 PILLS, POISON = [11, 21, 31, 41, 51, 71], [71, 77]
@@ -21,7 +18,6 @@ def man_dist(start: tuple, end: tuple) -> int:
 class State(object):
 
     def __init__(self, grid):
-
         self._gridDict = {(x, y): ele for x, row in enumerate(grid) for y, ele in enumerate(row)}
         self.cell_cnt = {cord: 0 for cord in self._gridDict}
         self._pacman = next((cord for cord, ele in self._gridDict.items() if ele == PACMAN), None)
@@ -93,6 +89,23 @@ class State(object):
     def pill_count(self, val):
         self._pill_count = val
 
+    def maze_dist(self, start, end):
+        visited, queue = set(), collections.deque([start])
+        grid = self.grid
+        d = 0
+        while queue:
+            u = queue.popleft()  # front element
+            visited.add(u)
+            u_adj = [vector_add(u, step) for step in DIRECTIONS.values() if
+                     grid[vector_add(u, step)] not in [WALL] + POISON + R_GHOST + B_GHOST + Y_GHOST + G_GHOST]
+            for v in u_adj:
+                if v not in visited:
+                    if v == end:
+                        return d + 1
+                    visited.add(v)
+                    queue.append(v)
+            d += 1
+        return sys.maxsize
 
 
 class PacmanController:
@@ -134,30 +147,35 @@ class PacmanController:
         if p_cords is None:
             return "reset"
 
-        moves = {key: vector_add(p_cords, val) for key, val in DIRECTIONS.items() if
-                 curr_state.grid[vector_add(p_cords, val)] not in
-                 [WALL]}
+        poison_pill_cnt = len([x for x in curr_state.poison if x == POISON[0]])  # count pills with poison
+        if poison_pill_cnt == 1 and curr_state.pill_count == 1:
+            moves = {key: vector_add(p_cords, val) for key, val in DIRECTIONS.items() if
+                     curr_state.grid[vector_add(p_cords, val)] not in [WALL, POISON[
+                         1]] + B_GHOST + Y_GHOST + G_GHOST + R_GHOST}
+        else:
+            moves = {key: vector_add(p_cords, val) for key, val in DIRECTIONS.items() if
+                     curr_state.grid[vector_add(p_cords, val)] not in [
+                         WALL] + POISON + B_GHOST + Y_GHOST + G_GHOST + R_GHOST}
         if not moves:
             return "reset"
+        flee_moves1, flee_moves2 = [], []
+        if curr_state.ghosts.values() and curr_state.pill_count > 1:
 
-        poison_pill_cnt = len([x for x in curr_state.poison if x == POISON[0]])  # count pills with poison
-        if curr_state.ghosts.values():
             try:
                 blue_ghst_md = man_dist(curr_state.ghosts[20], p_cords)
             except:
                 blue_ghst_md = sys.maxsize
             closest_ghst = min(curr_state.ghosts.values(), key=lambda g_cords: man_dist(p_cords, g_cords))
             min_ghst_md_pacman = man_dist(p_cords, closest_ghst)
-            if len(curr_state.ghosts) == 1 and min_ghst_md_pacman == 1 and poison_pill_cnt:  # unsolvable
-                return "reset"
-
-            if (min_ghst_md_pacman <= 2) or (blue_ghst_md<=3):  # flee mode
-                flee_move = max(moves, key=lambda key: man_dist(moves[key], closest_ghst))
-                # flee_move_b =
-                return flee_move
-
+            # if len(curr_state.ghosts) == 1 and min_ghst_md_pacman == 1 and poison_pill_cnt:  # unsolvable
+            #     return "reset"
+            if blue_ghst_md <= 3:
+                flee_moves1 = sorted(moves, key=lambda d: man_dist(moves[d], curr_state.ghosts[20]), reverse=True)[:1]
+            if min_ghst_md_pacman <= 2:  # flee mode
+                flee_moves2 = sorted(moves, key=lambda key: man_dist(moves[key], closest_ghst), reverse=True)[:1]
+        if flee_moves1 or flee_moves2:
+            moves = {k: moves[k] for k in set(flee_moves1 + flee_moves2)}
         closest_pill = min(curr_state.pills, key=lambda p: self.shortest_trees[p][p_cords])
-        # shortest = min(moves, key=lambda key: man_dist(moves[key], closest_pill))
         shortest = min(moves, key=lambda key: self.shortest_trees[closest_pill][moves[key]])
 
         return shortest

@@ -2,6 +2,8 @@ from copy import deepcopy
 import random
 import ex2
 import time
+from collections import defaultdict
+import statistics
 
 PILL_CONSTANT = 1
 RESET_CONSTANT = -20
@@ -10,6 +12,7 @@ PROBABILITIES = {"red": 0.9, "green": 0.7, "blue": 0.4, "yellow": 0.4}
 BLOCKING_CODES = (20, 21, 30, 31, 40, 41, 50, 51, 99)
 LOSS_INDEXES = (20, 21, 30, 31, 40, 41, 50, 51, 71, 77)
 COLOR_CODES = {"red": 50, "green": 40, "blue": 20, "yellow": 30}
+
 
 # def signal_handler(signum, frame):
 #     f.write('Simulation time-out')
@@ -219,30 +222,30 @@ if __name__ == '__main__':
     problems = (
 
         ((
-            (99, 99, 99),
-            (99, 11, 99),
-            (99, 66, 99),
-            (99, 99, 99)
+             (99, 99, 99),
+             (99, 11, 99),
+             (99, 66, 99),
+             (99, 99, 99)
          ), 10),
 
         ((
-            (99, 99, 99, 99, 99),
-            (99, 11, 11, 40, 99),
-            (99, 31, 10, 10, 99),
-            (99, 11, 11, 11, 99),
-            (99, 11, 77, 11, 99),
-            (99, 11, 11, 66, 99),
-            (99, 99, 99, 99, 99)
-        ), 20),
+             (99, 99, 99, 99, 99),
+             (99, 11, 11, 40, 99),
+             (99, 31, 10, 10, 99),
+             (99, 11, 11, 11, 99),
+             (99, 11, 77, 11, 99),
+             (99, 11, 11, 66, 99),
+             (99, 99, 99, 99, 99)
+         ), 20),
 
         ((
-         (99, 99, 99, 99, 99, 99, 99),
-         (99, 11, 11, 66, 11, 11, 99),
-         (99, 11, 11, 11, 11, 11, 99),
-         (99, 11, 11, 71, 11, 51, 99),
-         (99, 11, 11, 11, 11, 11, 99),
-         (99, 11, 11, 11, 11, 11, 99),
-         (99, 99, 99, 99, 99, 99, 99),
+             (99, 99, 99, 99, 99, 99, 99),
+             (99, 11, 11, 66, 11, 11, 99),
+             (99, 11, 11, 11, 11, 11, 99),
+             (99, 11, 11, 71, 11, 51, 99),
+             (99, 11, 11, 11, 11, 11, 99),
+             (99, 11, 11, 11, 11, 11, 99),
+             (99, 99, 99, 99, 99, 99, 99),
          ), 50),
 
         (((99, 99, 99, 99, 99, 99, 99, 99, 99),
@@ -339,12 +342,23 @@ if __name__ == '__main__':
 
     )
 
-    results = []
+    results = defaultdict(list)
 
-    for problem, num_of_steps in problems:
-        my_eval = Evaluator(ex2.PacmanController(problem, num_of_steps), problem, num_of_steps)
-        results.append(my_eval.evaluate_agent())
+    for number, problem2 in enumerate(problems):
+        problem, num_of_steps = problem2[0], problem2[1]
 
-    for number, result in enumerate(results):
-        print("the result for input", number + 1, "is", result)
+        for t in range(100):
+            my_eval = Evaluator(ex2.PacmanController(problem, num_of_steps), problem, num_of_steps)
+            results[number].append(my_eval.evaluate_agent())
+        # results.append(my_eval.evaluate_agent())
+    avgs = []
+    for number, result in results.items():
+        print("input {}: avg: {:^10}, max: {:^10}, min: {:^10}, median: {:^10}".format(number + 1,
+                                                                                                statistics.mean(result),
+                                                                                                max(result),
+                                                                                                min(result),
+                                                                                                statistics.median(result)))
+        avgs.append( statistics.mean(result))
 
+        # print("input", number + 1, "avg:", sum(result) / 100, "max:", max(result))
+    print("total avg:",statistics.mean(avgs))
