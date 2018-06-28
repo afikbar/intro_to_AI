@@ -3,7 +3,7 @@ import sys, collections
 from utils import hashabledict, vector_add
 from copy import deepcopy
 
-ids = ["111111111", "111111111"]
+ids = ["311121289", "961151147"]
 
 WALL, PACMAN, CELL = 99, 66, 10
 PILLS, POISON = [11, 21, 31, 41, 51, 71], [71, 77]
@@ -36,7 +36,6 @@ class State(object):
         self._ghosts = {k: v for k, v in self._ghosts.items() if v}  # removes keys with empty values
         self._pill_count = len(self._pills)
 
-    # region
     @property
     def grid(self):
         return self._gridDict
@@ -92,7 +91,7 @@ class State(object):
     @pill_count.setter
     def pill_count(self, val):
         self._pill_count = val
-    # endregion
+
     def __eq__(self, other):
         return isinstance(other, State) and self._gridDict.__eq__(other.grid)
 
@@ -104,7 +103,7 @@ class State(object):
 
     def print(self, depth=0):
         temp = sys.stdout
-        sys.stdout = open("temp.csv", 'a')
+        sys.stdout = open("temp.txt", 'a')
         print(" State {}:\n".format(depth))
         row = 0
         for cord, ele in self._gridDict.items():
@@ -189,13 +188,13 @@ class PacmanProblem(search.Problem):
         if p_cords is None or state.grid[p_cords] == EATEN_BY:
             # raise StopIteration # weird error with this
             return
-        for action, step in reversed(list(DIRECTIONS.items())):
+        for action, step in DIRECTIONS.items():
             cord = vector_add(p_cords, step)  # adds tuples element-wise
             t_cord = p_cords if state.grid[cord] == WALL else cord  # checks if WALL
             ghosts_md = [man_dist(t_cord, g_cord) for g_cord in state.ghosts.values()]
             # keeping 2 steps away from ghost at all time (ghost plays after pacman)
             if all(dist >= 2 for dist in ghosts_md) and (
-                    state.grid[cord] not in [WALL]+POISON):  # and state.cell_cnt[cord] < 2:
+                    state.grid[cord] not in [WALL] + POISON):  # and state.cell_cnt[cord] < 2:
                 yield action
 
     def result(self, state, action):
@@ -209,8 +208,7 @@ class PacmanProblem(search.Problem):
         if rslt.grid[p_cords] == EATEN_BY:  # if pacman was eaten dont play
             return rslt
         rslt_p_cords = vector_add(p_cords, DIRECTIONS[action])  # gets aimed cell
-        # rslt_p_cords = p_cords if rslt.grid[rslt_p_cords] == WALL else rslt_p_cords  # checks if WALL
-        assert rslt.grid[rslt_p_cords] != WALL
+        rslt_p_cords = p_cords if rslt.grid[rslt_p_cords] == WALL else rslt_p_cords  # checks if WALL
         # move pacman:
         if rslt.grid[rslt_p_cords] == PILLS[0]:
             rslt.pill_count -= 1
@@ -310,11 +308,7 @@ class PacmanProblem(search.Problem):
             curr = closest
             pills.remove(closest)
 
-        # if min_ghst_md_pacman > pills_real_dist_sum:
-        #     min_ghst_md_pacman = 0
         """  minimum steps + min ghost dist(L1) to poison + max dist(L1) between ghosts - ghost dist(L1) from pacman """
-        # return pills_real_dist_sum + min_ghost_md_poison + ghost_md_max - min_ghst_md_pacman * poison_pill_cnt / (
-        #             node.depth + 1)
         return pills_real_dist_sum + min_ghost_md_poison + ghost_md_max - min_ghst_md_pacman
         # return pills_real_dist_sum + g_md_poison + ghost_md_max - ghost_md_pacman
 
