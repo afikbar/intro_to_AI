@@ -11,7 +11,6 @@ LOSS_INDEXES = (20, 21, 22, 23, 30, 31, 32, 33, 40, 41, 42, 43, 50, 51, 52, 53, 
 COLOR_CODES = {"red": 50, "green": 40, "blue": 20, "yellow": 30}
 WALKABLE_TILES = (10, 11, 12, 13)
 
-
 # def signal_handler(signum, frame):
 #     f.write('Simulation time-out')
 #     print('simulation time out')
@@ -21,28 +20,24 @@ WALKABLE_TILES = (10, 11, 12, 13)
 def create_uniform_probability(a, b):
     def sample_probability():
         return random.uniform(a, b)
-
     return sample_probability
 
 
 def create_exponential_probability(mean):
     def sample_probability():
         return random.expovariate(mean)
-
     return sample_probability
 
 
 def create_normal_probability(mean, sigma):
     def sample_probability():
         return random.gauss(mean, sigma)
-
     return sample_probability
 
 
 def create_lognormal_distribution(mu, alpha):
     def sample_probability():
         return random.lognormvariate(mu, alpha)
-
     return sample_probability
 
 
@@ -241,6 +236,7 @@ class Evaluator:
 
     def evaluate_agent(self):
         for step in range(self.steps):
+            #action = self.agent.choose_next_action(self.state_to_agent()[0], self.state_to_agent()[1])
             action = self.agent.choose_next_action(self.state_to_agent()[0], self.state_to_agent()[1])
             if not is_action_legal(action):
                 raise Exception("illegal action!", action, "happened at step number:", step)
@@ -278,19 +274,20 @@ if __name__ == '__main__':
          ()),
 
         ((
-             (99, 99, 99, 99, 99, 99, 99),
-             (99, 11, 11, 66, 11, 11, 99),
-             (99, 11, 11, 11, 11, 11, 99),
-             (99, 12, 12, 73, 13, 53, 99),
-             (99, 12, 12, 13, 13, 13, 99),
-             (99, 12, 12, 13, 13, 13, 99),
-             (99, 99, 99, 99, 99, 99, 99),
+         (99, 99, 99, 99, 99, 99, 99),
+         (99, 11, 11, 66, 11, 11, 99),
+         (99, 11, 11, 11, 11, 11, 99),
+         (99, 12, 12, 73, 13, 53, 99),
+         (99, 12, 12, 13, 13, 13, 99),
+         (99, 12, 12, 13, 13, 13, 99),
+         (99, 99, 99, 99, 99, 99, 99),
          ),
          30,
          {"11": create_uniform_probability(0.5, 2), "12": create_exponential_probability(1.5),
           "13": create_exponential_probability(1.7)},
          {"red": 0.9, "green": 0.7, "blue": 0.4, "yellow": 0.4},
          ()),
+
 
         ((
              (99, 99, 99, 99, 99, 99, 99),
@@ -308,22 +305,34 @@ if __name__ == '__main__':
          ("red",)),
     )
 
+    results = []
+
+    for problem, num_of_steps, pill_rewards_dict, ghost_movement_probabilities, diagonal_moving in problems:
+        my_eval = Evaluator(ex3.PacmanController(problem, num_of_steps), problem, num_of_steps,
+                            pill_rewards_dict, ghost_movement_probabilities, diagonal_moving)
+        results.append(my_eval.evaluate_agent())
+
+    for number, result in enumerate(results):
+        print("the result for input", number + 1, "is", result)
+
+ # ============================
     import statistics
     from collections import defaultdict
 
     results = defaultdict(list)
-    prob_num = 0
-
+    i=0
     for problem, num_of_steps, pill_rewards_dict, ghost_movement_probabilities, diagonal_moving in problems:
-        prob_num += 1
-        for t in range(1000):
-            my_eval = Evaluator(ex3.PacmanController(problem, num_of_steps), problem, num_of_steps,
-                                pill_rewards_dict, ghost_movement_probabilities, diagonal_moving)
-            results[prob_num].append(my_eval.evaluate_agent())
+        # problem, num_of_steps = problem2[0], problem2[1]
 
+        for t in range(100):
+            my_eval = Evaluator(ex3.PacmanController(problem, num_of_steps), problem, num_of_steps,
+                            pill_rewards_dict, ghost_movement_probabilities, diagonal_moving)
+            results[i].append(my_eval.evaluate_agent())
+            # results.append(my_eval.evaluate_agent())
+        i+=1
     avgs = []
     for number, result in results.items():
-        print("input {}: avg: {:^10}, max: {:^10}, min: {:^10}, median: {:^10}".format(number,
+        print("input {}: avg: {:^10}, max: {:^10}, min: {:^10}, median: {:^10}".format(number + 1,
                                                                                        statistics.mean(result),
                                                                                        max(result),
                                                                                        min(result),

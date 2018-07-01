@@ -1,5 +1,6 @@
 import time
 import random
+
 import sys, collections
 from utils import hashabledict, vector_add
 from copy import deepcopy
@@ -7,8 +8,8 @@ from copy import deepcopy
 ids = ["311121289", "961152147"]
 
 WALL, PACMAN, CELL = 99, 66, 10
-PILLS, POISON = [11, 12, 13, 21, 22, 23, 31, 32, 33, 41, 42, 43, 51, 52, 53, 71, 72, 73], [71, 72, 73, 77]
-B_GHOST, Y_GHOST, G_GHOST, R_GHOST = [20, 21, 22, 23], [30, 31, 32, 33], [40, 41, 42, 43], [50, 51, 52, 53]
+PILLS, POISON = [11,12, 13, 21, 22, 23, 31, 32, 33, 41, 42, 43, 51, 52, 53,  71, 72, 73], [71, 72, 73, 77]
+B_GHOST, Y_GHOST, G_GHOST, R_GHOST = [20, 21, 22, 23], [30, 31, 32 ,33], [40, 41, 42 ,43], [50, 51, 52 ,53]
 EATEN_BY = 88
 
 DIRECTIONS = {'R': (0, 1), 'D': (1, 0), 'L': (0, -1), 'U': (- 1, 0)}  # order matters
@@ -124,6 +125,7 @@ class State(object):
 class PacmanController:
     """This class is a controller for a pacman agent."""
 
+
     def __init__(self, state, steps):
         """Initialize controller for given the initial setting.
         This method MUST terminate within the specified timeout."""
@@ -187,8 +189,7 @@ class PacmanController:
                 flee_moves2 = sorted(moves, key=lambda key: man_dist(moves[key], closest_ghst), reverse=True)[:1]
         if flee_moves1 or flee_moves2:
             moves = {k: moves[k] for k in set(flee_moves1 + flee_moves2)}
-        closest_pill = min(curr_state.pills,
-                           key=lambda p: self.shortest_trees[p][p_cords] / curr_state.get_pill_weight(p))
+        closest_pill = min(curr_state.pills, key=lambda p: self.shortest_trees[p][p_cords]/curr_state.get_pill_weight(p))
         shortest = min(moves, key=lambda key: self.shortest_trees[closest_pill][moves[key]])
 
         return shortest
@@ -211,7 +212,7 @@ class PacmanController:
         # closest ghost to pacman (L1)
         min_ghst_md_pacman = min([man_dist(state.pacman, ghost) for ghost in state.ghosts.values()], default=0)
         if (len(state.ghosts) == 1 and min_ghst_md_pacman == 1 and poison_pill_cnt) or (
-                len(state.ghosts) == 0 and poison_pill_cnt):  # unsolvable
+                        len(state.ghosts) == 0 and poison_pill_cnt):  # unsolvable
             return sys.maxsize
 
         ghost_md_max = 0
@@ -243,6 +244,7 @@ class PacmanController:
         return pills_real_dist_sum + min_ghost_md_poison + ghost_md_max - min_ghst_md_pacman
         # return pills_real_dist_sum + g_md_poison + ghost_md_max - ghost_md_pacman
 
+
     """Feel free to add your own functions"""
 
     def random_walk(self, state, accumulated_reward):
@@ -269,5 +271,8 @@ class PacmanController:
         # print('COMPLETE choose_next_action')
 
 
+
 def create_pacman_problem(game):
     return PacmanController(game)
+
+
